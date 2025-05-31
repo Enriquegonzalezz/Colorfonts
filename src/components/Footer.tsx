@@ -13,7 +13,7 @@ export const Footer = () => {
             className="font-bold text-xl flex"
           >
             <LogoIcon />
-            ShadcnUI/React
+           Gonzalez-Molina-Escalona
           </a>
         </div>
 
@@ -152,7 +152,7 @@ export const Footer = () => {
 
       <section className="container pb-14 text-center">
         <h3>
-          &copy; 2024 Landing page made by{" "}
+          &copy; 2024 Landing page made by Gonzalez - Molina - Escalona. 
           <a
             rel="noreferrer noopener"
             target="_blank"
