@@ -1,174 +1,104 @@
-import { buttonVariants } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Facebook, Instagram, Linkedin } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Linkedin, Facebook, Instagram } from "lucide-react"
 
-interface TeamProps {
-  imageUrl: string;
-  name: string;
-  position: string;
-  socialNetworks: SociaNetworkslProps[];
-}
-
-interface SociaNetworkslProps {
-  name: string;
-  url: string;
-}
-
-const teamList: TeamProps[] = [
-  {
-    imageUrl: "https://i.pravatar.cc/150?img=35",
-    name: "Emma Smith",
-    position: "Product Manager",
-    socialNetworks: [
-      {
-        name: "Linkedin",
-        url: "https://www.linkedin.com/in/leopoldo-miranda/",
+export function Team() {
+  const teamMembers = [
+    {
+      id: 1,
+      name: "Emma Smith",
+      role: "Product Manager",
+      bio: "Lorem ipsum dolor sit amet, consectetur adipisicing elit.",
+      avatar: "/placeholder.svg?height=100&width=100",
+      social: {
+        linkedin: "#",
+        facebook: "#",
+        instagram: "#",
       },
-      {
-        name: "Facebook",
-        url: "https://www.facebook.com/",
+    },
+    {
+      id: 2,
+      name: "John Doe",
+      role: "Tech Lead",
+      bio: "Lorem ipsum dolor sit amet, consectetur adipisicing elit.",
+      avatar: "/placeholder.svg?height=100&width=100",
+      social: {
+        linkedin: "#",
+        facebook: "#",
+        instagram: "#",
       },
-      {
-        name: "Instagram",
-        url: "https://www.instagram.com/",
+    },
+    {
+      id: 3,
+      name: "Ashley Ross",
+      role: "Frontend Developer",
+      bio: "Lorem ipsum dolor sit amet, consectetur adipisicing elit.",
+      avatar: "/placeholder.svg?height=100&width=100",
+      social: {
+        linkedin: "#",
+        instagram: "#",
       },
-    ],
-  },
-  {
-    imageUrl: "https://i.pravatar.cc/150?img=60",
-    name: "John Doe",
-    position: "Tech Lead",
-    socialNetworks: [
-      {
-        name: "Linkedin",
-        url: "https://www.linkedin.com/in/leopoldo-miranda/",
+    },
+    {
+      id: 4,
+      name: "Bruce Rogers",
+      role: "Backend Developer",
+      bio: "Lorem ipsum dolor sit amet, consectetur adipisicing elit.",
+      avatar: "/placeholder.svg?height=100&width=100",
+      social: {
+        linkedin: "#",
+        facebook: "#",
       },
-      {
-        name: "Facebook",
-        url: "https://www.facebook.com/",
-      },
-      {
-        name: "Instagram",
-        url: "https://www.instagram.com/",
-      },
-    ],
-  },
-  {
-    imageUrl: "https://i.pravatar.cc/150?img=36",
-    name: "Ashley Ross",
-    position: "Frontend Developer",
-    socialNetworks: [
-      {
-        name: "Linkedin",
-        url: "https://www.linkedin.com/in/leopoldo-miranda/",
-      },
-
-      {
-        name: "Instagram",
-        url: "https://www.instagram.com/",
-      },
-    ],
-  },
-  {
-    imageUrl: "https://i.pravatar.cc/150?img=17",
-    name: "Bruce Rogers",
-    position: "Backend Developer",
-    socialNetworks: [
-      {
-        name: "Linkedin",
-        url: "https://www.linkedin.com/in/leopoldo-miranda/",
-      },
-      {
-        name: "Facebook",
-        url: "https://www.facebook.com/",
-      },
-    ],
-  },
-];
-
-export const Team = () => {
-  const socialIcon = (iconName: string) => {
-    switch (iconName) {
-      case "Linkedin":
-        return <Linkedin size="20" />;
-
-      case "Facebook":
-        return <Facebook size="20" />;
-
-      case "Instagram":
-        return <Instagram size="20" />;
-    }
-  };
+    },
+  ]
 
   return (
-    <section
-      id="team"
-      className="container py-24 sm:py-32"
-    >
-      <h2 className="text-3xl md:text-4xl font-bold">
-        <span className="bg-gradient-to-b from-primary/60 to-primary text-transparent bg-clip-text">
-          Our Dedicated{" "}
-        </span>
-        Crew
-      </h2>
+    <section className="section-blue py-16 px-4 md:px-6 lg:px-8">
+      <div className="container mx-auto">
+        <h2 className="text-4xl font-bold mb-2 text-white dark:text-white">
+          Our <span className="text-yellow-300 dark:text-blue-400">Dedicated</span> Crew
+        </h2>
+        <p className="text-lg text-blue-100 dark:text-slate-300 mb-12">
+          Lorem ipsum dolor sit amet consectetur, adipisicing elit. Veritatis dolor pariatur sit!
+        </p>
 
-      <p className="mt-4 mb-10 text-xl text-muted-foreground">
-        Lorem ipsum dolor sit amet consectetur, adipisicing elit. Veritatis
-        dolor pariatur sit!
-      </p>
-
-      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 gap-y-10">
-        {teamList.map(
-          ({ imageUrl, name, position, socialNetworks }: TeamProps) => (
-            <Card
-              key={name}
-              className="bg-muted/50 relative mt-8 flex flex-col justify-center items-center"
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {teamMembers.map((member) => (
+            <div
+              key={member.id}
+              className="card-minimal text-center bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700"
             >
-              <CardHeader className="mt-8 flex justify-center items-center pb-2">
-                <img
-                  src={imageUrl}
-                  alt={`${name} ${position}`}
-                  className="absolute -top-12 rounded-full w-24 h-24 aspect-square object-cover"
-                />
-                <CardTitle className="text-center">{name}</CardTitle>
-                <CardDescription className="text-primary">
-                  {position}
-                </CardDescription>
-              </CardHeader>
-
-              <CardContent className="text-center pb-2">
-                <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
-              </CardContent>
-
-              <CardFooter>
-                {socialNetworks.map(({ name, url }: SociaNetworkslProps) => (
-                  <div key={name}>
-                    <a
-                      rel="noreferrer noopener"
-                      href={url}
-                      target="_blank"
-                      className={buttonVariants({
-                        variant: "ghost",
-                        size: "sm",
-                      })}
-                    >
-                      <span className="sr-only">{name} icon</span>
-                      {socialIcon(name)}
-                    </a>
-                  </div>
-                ))}
-              </CardFooter>
-            </Card>
-          )
-        )}
+              <div className="flex justify-center mb-4">
+                <Avatar className="h-24 w-24 border-4 border-[#005CA1] dark:border-blue-400">
+                  <AvatarImage src={member.avatar || "/placeholder.svg"} alt={member.name} />
+                  <AvatarFallback className="bg-[#005CA1] dark:bg-blue-600 text-white">
+                    {member.name.charAt(0)}
+                  </AvatarFallback>
+                </Avatar>
+              </div>
+              <h3 className="text-xl font-bold mb-1 text-gray-900 dark:text-white">{member.name}</h3>
+              <p className="text-sm mb-3 text-[#005CA1] dark:text-blue-400 font-medium">{member.role}</p>
+              <p className="mb-4 text-gray-600 dark:text-slate-300">{member.bio}</p>
+              <div className="flex justify-center space-x-3">
+                {member.social.linkedin && (
+                  <a href={member.social.linkedin} className="hover:opacity-80 text-[#005CA1] dark:text-blue-400">
+                    <Linkedin size={20} />
+                  </a>
+                )}
+                {member.social.facebook && (
+                  <a href={member.social.facebook} className="hover:opacity-80 text-[#005CA1] dark:text-blue-400">
+                    <Facebook size={20} />
+                  </a>
+                )}
+                {member.social.instagram && (
+                  <a href={member.social.instagram} className="hover:opacity-80 text-[#005CA1] dark:text-blue-400">
+                    <Instagram size={20} />
+                  </a>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
-  );
-};
+  )
+}

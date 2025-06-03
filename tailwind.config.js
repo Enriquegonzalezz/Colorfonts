@@ -6,6 +6,7 @@ module.exports = {
     "./components/**/*.{ts,tsx}",
     "./app/**/*.{ts,tsx}",
     "./src/**/*.{ts,tsx}",
+    "*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
     container: {
@@ -50,6 +51,10 @@ module.exports = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        // Colores vibrantes adicionales
+        "vibrant-blue": "hsl(var(--vibrant-blue))",
+        "vibrant-yellow": "hsl(var(--vibrant-yellow))",
+        "vibrant-orange": "hsl(var(--vibrant-orange))",
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -73,4 +78,4 @@ module.exports = {
     },
   },
   plugins: [require("tailwindcss-animate")],
-};
+}
