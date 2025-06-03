@@ -1,78 +1,153 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import { Navbar } from "./components/Navbar";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, ChevronUp, ChevronDown } from "lucide-react";
 
 export default function FontsView() {
   const [fontFiles, setFontFiles] = useState<(File | null)[]>([null, null]);
+  const [fontUrls, setFontUrls] = useState<(string | null)[]>([null, null]);
   const [sizes, setSizes] = useState<{ paragraph: number; subtitle: number; title: number }>({
     paragraph: 16,
     subtitle: 24,
     title: 32,
   });
   const [savedFonts, setSavedFonts] = useState<
-    { fontFiles: (File | null)[]; sizes: { paragraph: number; subtitle: number; title: number } }[]
+    { fontFiles: (File | null)[]; fontUrls: (string | null)[]; sizes: { paragraph: number; subtitle: number; title: number } }[]
   >([]);
   const [editRow, setEditRow] = useState<number | null>(null);
 
+  // Refs for file inputs to reset them
+  const fileInputRefs = [useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null)];
+
+  // Handle font file upload and create object URL for preview
   const handleFileChange = (index: number, file: File | null) => {
     const newFiles = [...fontFiles];
+    const newUrls = [...fontUrls];
     newFiles[index] = file;
+    if (file) {
+      newUrls[index] = URL.createObjectURL(file);
+    } else {
+      newUrls[index] = null;
+    }
     setFontFiles(newFiles);
+    setFontUrls(newUrls);
   };
 
+  // Font size change
   const handleSizeChange = (key: keyof typeof sizes, value: number) => {
     setSizes(prev => ({ ...prev, [key]: value }));
   };
 
+  // Save fonts and sizes
   const handleSave = () => {
     setSavedFonts(prev => [
       ...prev,
       {
         fontFiles: [...fontFiles],
+        fontUrls: [...fontUrls],
         sizes: { ...sizes },
       },
     ]);
     setFontFiles([null, null]);
+    setFontUrls([null, null]);
     setSizes({ paragraph: 16, subtitle: 24, title: 32 });
+    fileInputRefs.forEach(ref => ref.current && (ref.current.value = ""));
   };
 
+  // Delete row
   const handleDelete = (rowIdx: number) => {
     setSavedFonts(prev => prev.filter((_, idx) => idx !== rowIdx));
   };
 
+  // Edit row
   const handleEdit = (rowIdx: number) => {
     setEditRow(rowIdx);
     setFontFiles([...savedFonts[rowIdx].fontFiles]);
+    setFontUrls([...savedFonts[rowIdx].fontUrls]);
     setSizes({ ...savedFonts[rowIdx].sizes });
+    fileInputRefs.forEach((ref, idx) => ref.current && (ref.current.value = ""));
   };
 
+  // Update row
   const handleUpdate = () => {
     if (editRow !== null) {
       setSavedFonts(prev =>
         prev.map((row, idx) =>
           idx === editRow
-            ? { fontFiles: [...fontFiles], sizes: { ...sizes } }
+            ? { fontFiles: [...fontFiles], fontUrls: [...fontUrls], sizes: { ...sizes } }
             : row
         )
       );
       setEditRow(null);
       setFontFiles([null, null]);
+      setFontUrls([null, null]);
       setSizes({ paragraph: 16, subtitle: 24, title: 32 });
+      fileInputRefs.forEach(ref => ref.current && (ref.current.value = ""));
     }
   };
 
+  // Font family names for preview
+  const fontFamily1 = fontUrls[0] ? `'Font1', sans-serif` : "sans-serif";
+  const fontFamily2 = fontUrls[1] ? `'Font2', serif` : "serif";
+
+  // Dynamic style for font-face
+  const fontFaceStyle = `
+    ${fontUrls[0] ? `
+      @font-face {
+        font-family: 'Font1';
+        src: url('${fontUrls[0]}');
+      }
+    ` : ""}
+    ${fontUrls[1] ? `
+      @font-face {
+        font-family: 'Font2';
+        src: url('${fontUrls[1]}');
+      }
+    ` : ""}
+  `;
+
+  // Font size controls
+  const renderSizeControl = (label: string, key: keyof typeof sizes, min: number, max: number) => (
+    <div className="flex items-center gap-2">
+      <label className="text-gray-200 text-sm w-20">{label}:</label>
+      <button
+        type="button"
+        className="p-1 rounded border border-green-500 text-green-400 hover:bg-green-700"
+        onClick={() => handleSizeChange(key, Math.max(min, sizes[key] - 1))}
+      >
+        <ChevronDown size={16} />
+      </button>
+      <input
+        type="number"
+        min={min}
+        max={max}
+        value={sizes[key]}
+        onChange={e => handleSizeChange(key, Number(e.target.value))}
+        className="w-14 px-2 py-1 rounded bg-[#141414] border border-green-500 text-gray-100 text-center"
+      />
+      <button
+        type="button"
+        className="p-1 rounded border border-green-500 text-green-400 hover:bg-green-700"
+        onClick={() => handleSizeChange(key, Math.min(max, sizes[key] + 1))}
+      >
+        <ChevronUp size={16} />
+      </button>
+      <span className="text-xs text-gray-400 ml-2">px</span>
+    </div>
+  );
+
   return (
     <>
+      <style>{fontFaceStyle}</style>
       <Navbar />
-      <div className="min-h-screen bg-[#141414] py-6 flex flex-col justify-center sm:py-12">
+      <div className="min-h-screen bg-[#141414] py-6 flex flex-col justify-center  sm:py-12">
         <div className="relative py-3 sm:max-w-xl sm:mx-auto">
           <div className="absolute inset-0 bg-[#23272e] border-2 border-green-500 shadow-lg rounded-3xl"></div>
           <div className="relative px-4 py-10 bg-[#23272e] border-2 border-green-500 shadow-lg rounded-3xl sm:p-12">
             <h1 className="text-2xl font-semibold text-green-400 text-center mb-6">
               Sube tus fuentes y define tamaños
             </h1>
-            <div className="mt-6 flex flex-col gap-6">
+            <div className="mt-6 flex flex-col items-center gap-6">
               <div className="flex flex-col gap-4">
                 {[0, 1].map(idx => (
                   <div className="flex items-center space-x-4" key={idx}>
@@ -80,6 +155,7 @@ export default function FontsView() {
                       Fuente {idx + 1}:
                     </label>
                     <input
+                      ref={fileInputRefs[idx]}
                       id={`font-file-${idx}`}
                       type="file"
                       accept=".ttf,.otf,.woff,.woff2"
@@ -93,54 +169,9 @@ export default function FontsView() {
                 ))}
               </div>
               <div className="flex flex-col gap-2 mt-6">
-                <div className="flex items-center space-x-2">
-                  <div className="flex justify-between items-center w-[40%]">
-                    <label htmlFor="size-paragraph" className="text-gray-200 text-sm ">
-                      Párrafo:
-                    </label>
-                    <input
-                      id="size-paragraph"
-                      type="number"
-                      min={8}
-                      max={72}
-                      value={sizes.paragraph}
-                      onChange={e => handleSizeChange("paragraph", Number(e.target.value))}
-                      className="w-16 px-2 py-1 rounded bg-[#141414] border border-green-500 text-gray-100"
-                    />
-                  </div>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <div className="flex justify-between items-center w-[40%]">
-                    <label htmlFor="size-subtitle" className="text-gray-200 text-sm">
-                      Subtítulo:
-                    </label>
-                    <input
-                      id="size-subtitle"
-                      type="number"
-                      min={8}
-                      max={72}
-                      value={sizes.subtitle}
-                      onChange={e => handleSizeChange("subtitle", Number(e.target.value))}
-                      className="w-16 px-2 py-1 rounded bg-[#141414] border border-green-500 text-gray-100"
-                    />
-                  </div>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <div className="flex justify-between items-center w-[40%]">
-                    <label htmlFor="size-title" className="text-gray-200 text-sm">
-                      Título:
-                    </label>
-                    <input
-                      id="size-title"
-                      type="number"
-                      min={8}
-                      max={100}
-                      value={sizes.title}
-                      onChange={e => handleSizeChange("title", Number(e.target.value))}
-                      className="w-16 px-2 py-1 rounded bg-[#141414] border border-green-500 text-gray-100"
-                    />
-                  </div>
-                </div>
+                {renderSizeControl("Párrafo", "paragraph", 8, 72)}
+                {renderSizeControl("Subtítulo", "subtitle", 8, 72)}
+                {renderSizeControl("Título", "title", 8, 100)}
               </div>
               <div className="flex justify-between mt-8">
                 <button
@@ -163,6 +194,52 @@ export default function FontsView() {
                 </Link>
               </div>
             </div>
+            {/* PREVIEW */}
+            <div className="mt-10 bg-[#181b20] border border-green-700 rounded-2xl p-6 shadow-lg">
+              <h2 className="text-green-400 text-lg font-semibold mb-4">Vista previa</h2>
+              <div className="space-y-4">
+                <div>
+                  <span className="text-gray-400 text-xs">Título</span>
+                  <div
+                    style={{
+                      fontFamily: fontFamily2,
+                      fontSize: `${sizes.title}px`,
+                      fontWeight: 700,
+                      color: "#fff",
+                    }}
+                  >
+                    ¡Este es un título con tu fuente 2!
+                  </div>
+                </div>
+                <div>
+                  <span className="text-gray-400 text-xs">Subtítulo</span>
+                  <div
+                    style={{
+                      fontFamily: fontFamily2,
+                      fontSize: `${sizes.subtitle}px`,
+                      fontWeight: 500,
+                      color: "#b3e5fc",
+                    }}
+                  >
+                    Este es un subtítulo con tu fuente 2
+                  </div>
+                </div>
+                <div>
+                  <span className="text-gray-400 text-xs">Párrafo</span>
+                  <div
+                    style={{
+                      fontFamily: fontFamily1,
+                      fontSize: `${sizes.paragraph}px`,
+                      fontWeight: 400,
+                      color: "#e0e0e0",
+                    }}
+                  >
+                    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin euismod, urna eu tincidunt consectetur, nisi nisl aliquam nunc, eget aliquam massa nisl quis neque.
+                  </div>
+                </div>
+              </div>
+            </div>
+            {/* END PREVIEW */}
           </div>
         </div>
         {/* Tabla CRUD en un recuadro aparte debajo, con el mismo ancho */}
