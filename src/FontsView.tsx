@@ -6,11 +6,7 @@ import { Pencil, Trash2, ChevronUp, ChevronDown } from "lucide-react";
 export default function FontsView() {
   const [fontFiles, setFontFiles] = useState<(File | null)[]>([null, null]);
   const [fontUrls, setFontUrls] = useState<(string | null)[]>([null, null]);
-  const [sizes, setSizes] = useState<{ paragraph: number; subtitle: number; title: number }>({
-    paragraph: 16,
-    subtitle: 24,
-    title: 32,
-  });
+  const [sizes, setSizes] = useState({ paragraph: 16, subtitle: 24, title: 32 });
   const [savedFonts, setSavedFonts] = useState<
     { fontFiles: (File | null)[]; fontUrls: (string | null)[]; sizes: { paragraph: number; subtitle: number; title: number } }[]
   >([]);
@@ -118,6 +114,7 @@ export default function FontsView() {
         <ChevronDown size={16} />
       </button>
       <input
+        placeholder="Size"
         type="number"
         min={min}
         max={max}
@@ -140,7 +137,7 @@ export default function FontsView() {
     <>
       <style>{fontFaceStyle}</style>
       <Navbar />
-      <div className="min-h-screen bg-[#141414] py-6 flex flex-col justify-center  sm:py-12">
+      <div className="min-h-screen bg-[#141414] py-6 flex flex-col justify-center sm:py-12">
         <div className="relative py-3 sm:max-w-xl sm:mx-auto">
           <div className="absolute inset-0 bg-[#23272e] border-2 border-green-500 shadow-lg rounded-3xl"></div>
           <div className="relative px-4 py-10 bg-[#23272e] border-2 border-green-500 shadow-lg rounded-3xl sm:p-12">
@@ -173,8 +170,9 @@ export default function FontsView() {
                 {renderSizeControl("Subtítulo", "subtitle", 8, 72)}
                 {renderSizeControl("Título", "title", 8, 100)}
               </div>
-              <div className="flex justify-between mt-8">
+              <div className="flex justify-between mt-8 w-full">
                 <button
+                  type="button"
                   onClick={editRow !== null ? handleUpdate : handleSave}
                   className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded border border-green-500 focus:outline-none focus:shadow-outline"
                 >
@@ -283,6 +281,7 @@ export default function FontsView() {
                       <td className="px-2 py-2 text-center text-gray-300">{row.sizes.title}</td>
                       <td className="px-2 py-2 flex gap-2 justify-center">
                         <button
+                          type="button"
                           onClick={() => handleEdit(rowIdx)}
                           className="p-1 rounded hover:bg-green-700"
                           title="Modificar"
@@ -290,6 +289,7 @@ export default function FontsView() {
                           <Pencil className="w-4 h-4 text-green-400" />
                         </button>
                         <button
+                          type="button"
                           onClick={() => handleDelete(rowIdx)}
                           className="p-1 rounded hover:bg-red-700"
                           title="Eliminar"
