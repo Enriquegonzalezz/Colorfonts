@@ -3,6 +3,24 @@ const {Colores} = require('../../db/schema');
 const { tr } = require('zod/v4/locales');
 
 class ColorsModel {
+    static async getColorPredeterminado() {
+        try {
+            const color = await Colores.findOne({where: { predeterminado: 1 } });
+            if (!color) {
+                throw new Error("No default color found.");
+            }
+            return {
+                color_1: color.color_1,
+                color_2: color.color_2,
+                color_3: color.color_3,
+                color_4: color.color_4,
+                color_5: color.color_5
+            };
+        } catch (error) {
+            throw new Error(`Error retrieving default color: ${error}`);
+        }
+    }
+
     static async getColorsById(id) {
         try {
             const colors = await Colores.findAll({ where: { id_usuario: id } });

@@ -4,6 +4,19 @@ const {UsersController} = require('../Users/usersController');
 const usuariosController = new UsersController();
 
 class FontsController {
+    getFontPredeterminado = async (req, res) => {
+        try {
+            const font = await FontsModel.getFontPredeterminado();
+            if (!font) {
+                return res.status(404).json({ error: 'Fuente predeterminada no encontrada' });
+            }
+            return res.json(font);
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({ error: 'Error retrieving default font' });
+        }
+    }
+
     getFonts = async (req, res) => {
         const isAuthenticated = await usuariosController.auth(req);
         if (!isAuthenticated.valid) {
@@ -51,7 +64,7 @@ class FontsController {
             return res.status(401).json({ message: "El usuario no está autorizado." });
         }
         const { id } = req.params;
-        console.log(req.body['tamano_1']);
+        
         try {
             const fontData = {
             tamano_1: req.body.tamano_1 ? Number(req.body.tamano_1) : null,

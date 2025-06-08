@@ -5,6 +5,19 @@ const { validateColor } = require('./colorsValidate');
 const usuariosController = new UsersController();
 
 class ColorsController {
+    getColorPredeterminado = async (req, res) => {
+        try {
+            const color = await ColorsModel.getColorPredeterminado();
+            if (!color) {
+                return res.status(404).json({ error: 'Color predeterminado no encontrado' });
+            }
+            return res.json(color);
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({ error: 'Error retrieving default color' });
+        }
+    }
+
     getColors = async (req, res) => {
         const isAuthenticated = await usuariosController.auth(req)
         if (!isAuthenticated.valid) {

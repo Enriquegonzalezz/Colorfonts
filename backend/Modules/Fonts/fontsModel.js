@@ -3,6 +3,24 @@ const fs = require('fs');
 const path = require('path');
 
 class FontsModel {
+    static async getFontPredeterminado() {
+        try {
+            const font = await Fuentes.findOne({ where: { predeterminado: 1 } });
+            if (!font) {
+                throw new Error("No default font found.");
+            }
+            return {
+                fuente_1: font.fuente_1,
+                fuente_2: font.fuente_2,
+                tamano_1: font.tamano_1,
+                tamano_2: font.tamano_2,
+                tamano_3: font.tamano_3
+            };  
+        } catch (error) {
+            throw new Error(`Error retrieving default font: ${error}`);
+        }
+    }
+
     static async getFontsById(id) {
         try {
             const fonts = await Fuentes.findAll({ where: { id_usuario: id } });
