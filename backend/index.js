@@ -7,9 +7,12 @@ require('dotenv/config');
 const sequelize = require("./db/database");
 const cors = require('cors');
 const app = express();
+const path = require('path');
 
 app.use(cors());
 app.use(express.json());
+
+app.use('/public', express.static(path.join(__dirname, 'public')));
 
 sequelize.authenticate()
   .then(() => {

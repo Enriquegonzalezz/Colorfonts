@@ -1,20 +1,49 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Navbar } from "./components/Navbar";
 import { Pencil, Trash2, ChevronUp, ChevronDown } from "lucide-react";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 export default function FontsView() {
   const [fontFiles, setFontFiles] = useState<(File | null)[]>([null, null]);
   const [fontUrls, setFontUrls] = useState<(string | null)[]>([null, null]);
   const [sizes, setSizes] = useState({ paragraph: 16, subtitle: 24, title: 32 });
-  const [savedFonts, setSavedFonts] = useState<
-    { fontFiles: (File | null)[]; fontUrls: (string | null)[]; sizes: { paragraph: number; subtitle: number; title: number } }[]
-  >([]);
+  const navigate = useNavigate();
+  const FONT_BASE_URL = "http://localhost:3000/public/fonts/";
+
+  type FontRow = {
+    id: number;
+    fuente_1: string;
+    fuente_2: string;
+    tamano_1: number;
+    tamano_2: number;
+    tamano_3: number;
+  };
+
+  const [savedFonts, setSavedFonts] = useState<FontRow[]>([]);
   const [editRow, setEditRow] = useState<number | null>(null);
 
   // Refs for file inputs to reset them
   const fileInputRefs = [useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null)];
 
+
+  useEffect(() => {
+    const fetchFonts = async () => {
+      try {
+        const token = localStorage.getItem("access_token");
+        const res = await axios.get("http://localhost:3000/fonts", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        // Si tu backend devuelve un solo objeto, usa [res.data]
+        setSavedFonts(Array.isArray(res.data) ? res.data : [res.data]);
+      } catch (error) {
+        navigate("/login");
+        console.error("Error al obtener las fuentes:", error);
+      }
+    };
+    fetchFonts();
+  }, []);
   // Handle font file upload and create object URL for preview
   const handleFileChange = (index: number, file: File | null) => {
     const newFiles = [...fontFiles];
@@ -35,72 +64,148 @@ export default function FontsView() {
   };
 
   // Save fonts and sizes
-  const handleSave = () => {
-    setSavedFonts(prev => [
-      ...prev,
-      {
-        fontFiles: [...fontFiles],
-        fontUrls: [...fontUrls],
-        sizes: { ...sizes },
-      },
-    ]);
-    setFontFiles([null, null]);
-    setFontUrls([null, null]);
-    setSizes({ paragraph: 16, subtitle: 24, title: 32 });
-    fileInputRefs.forEach(ref => ref.current && (ref.current.value = ""));
+  const handleSave = async () => {
+    try {
+      const token = localStorage.getItem("access_token");
+      const formData = new FormData();
+      if (fontFiles[0]) formData.append("fuente_1", fontFiles[0]);
+      if (fontFiles[1]) formData.append("fuente_2", fontFiles[1]);
+      formData.append("tamano_1", sizes.paragraph.toString());
+      formData.append("tamano_2", sizes.subtitle.toString());
+      formData.append("tamano_3", sizes.title.toString());
+
+      await axios.post("http://localhost:3000/fonts/store", formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      // Refresca la lista
+      const res = await axios.get("http://localhost:3000/fonts", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setSavedFonts(Array.isArray(res.data) ? res.data : [res.data]);
+      setFontFiles([null, null]);
+      setFontUrls([null, null]);
+      setSizes({ paragraph: 16, subtitle: 24, title: 32 });
+      fileInputRefs.forEach(ref => ref.current && (ref.current.value = ""));
+    } catch (error) {
+      navigate("/login");
+      console.error("Error al guardar las fuentes:", error);
+    }
   };
 
   // Delete row
-  const handleDelete = (rowIdx: number) => {
-    setSavedFonts(prev => prev.filter((_, idx) => idx !== rowIdx));
+  const handleDelete = async (fontId: number) => {
+    try {
+      const token = localStorage.getItem("access_token");
+      await axios.delete(`http://localhost:3000/fonts/delete/${fontId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setSavedFonts(prev => prev.filter(row => row.id !== fontId));
+    } catch (error) {
+      navigate("/login");
+      console.error("Error al eliminar la fuente:", error);
+    }
   };
 
   // Edit row
   const handleEdit = (rowIdx: number) => {
     setEditRow(rowIdx);
-    setFontFiles([...savedFonts[rowIdx].fontFiles]);
-    setFontUrls([...savedFonts[rowIdx].fontUrls]);
-    setSizes({ ...savedFonts[rowIdx].sizes });
+    const row = savedFonts[rowIdx];
+    setSizes({
+      paragraph: row.tamano_1,
+      subtitle: row.tamano_2,
+      title: row.tamano_3,
+    });
+    // No puedes recuperar los archivos originales, pero puedes mostrar los nombres
+    setFontFiles([null, null]);
+    setFontUrls([row.fuente_1, row.fuente_2]);
     fileInputRefs.forEach((ref, idx) => ref.current && (ref.current.value = ""));
   };
 
-  // Update row
-  const handleUpdate = () => {
+  const handleUpdate = async () => {
     if (editRow !== null) {
-      setSavedFonts(prev =>
-        prev.map((row, idx) =>
-          idx === editRow
-            ? { fontFiles: [...fontFiles], fontUrls: [...fontUrls], sizes: { ...sizes } }
-            : row
-        )
-      );
-      setEditRow(null);
-      setFontFiles([null, null]);
-      setFontUrls([null, null]);
-      setSizes({ paragraph: 16, subtitle: 24, title: 32 });
-      fileInputRefs.forEach(ref => ref.current && (ref.current.value = ""));
+      try {
+        console.log("Editando fila:", editRow);
+        console.log("Datos de la fila:", savedFonts[editRow]);
+        console.log("tamano 1", sizes.paragraph);
+        console.log("tamano 2", sizes.subtitle);
+        console.log("tamano 3", sizes.title);
+        const token = localStorage.getItem("access_token");
+        const fontId = savedFonts[editRow].id;
+        /*const formData = new FormData();
+        if (fontFiles[0]) formData.append("fuente_1", fontFiles[0]);
+        if (fontFiles[1]) formData.append("fuente_2", fontFiles[1]);
+        formData.append("tamano_1", sizes.paragraph.toString());
+        formData.append("tamano_2", sizes.subtitle.toString());
+        formData.append("tamano_3", sizes.title.toString());*/
+
+        // Para guardar o actualizar (sin archivos)
+        await axios.put(
+          `http://localhost:3000/fonts/update/${fontId}`,
+          {
+            tamano_1: sizes.paragraph,
+            tamano_2: sizes.subtitle,
+            tamano_3: sizes.title,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        // Refresca la lista
+        const res = await axios.get("http://localhost:3000/fonts", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setSavedFonts(Array.isArray(res.data) ? res.data : [res.data]);
+        setEditRow(null);
+        setFontFiles([null, null]);
+        setFontUrls([null, null]);
+        setSizes({ paragraph: 16, subtitle: 24, title: 32 });
+        fileInputRefs.forEach(ref => ref.current && (ref.current.value = ""));
+      } catch (error) {
+        console.error("Error al actualizar las fuentes:", error);
+      }
     }
   };
 
-  // Font family names for preview
-  const fontFamily1 = fontUrls[0] ? `'Font1', sans-serif` : "sans-serif";
-  const fontFamily2 = fontUrls[1] ? `'Font2', serif` : "serif";
+  const previewFontUrl1 =
+    fontUrls[0] && fontFiles[0]
+      ? fontUrls[0]
+      : editRow !== null && savedFonts[editRow]?.fuente_1
+      ? `${FONT_BASE_URL}${savedFonts[editRow].fuente_1}`
+      : null;
 
+  const previewFontUrl2 =
+    fontUrls[1] && fontFiles[1]
+      ? fontUrls[1]
+      : editRow !== null && savedFonts[editRow]?.fuente_2
+      ? `${FONT_BASE_URL}${savedFonts[editRow].fuente_2}`
+      : null;
+
+
+  const fontFamily1 = previewFontUrl1 ? "'Font1', sans-serif" : "sans-serif";
+  const fontFamily2 = previewFontUrl2 ? "'Font2', serif" : "serif";    
   // Dynamic style for font-face
   const fontFaceStyle = `
-    ${fontUrls[0] ? `
-      @font-face {
-        font-family: 'Font1';
-        src: url('${fontUrls[0]}');
-      }
-    ` : ""}
-    ${fontUrls[1] ? `
-      @font-face {
-        font-family: 'Font2';
-        src: url('${fontUrls[1]}');
-      }
-    ` : ""}
-  `;
+  ${previewFontUrl1 ? `
+    @font-face {
+      font-family: 'Font1';
+      src: url('${previewFontUrl1}');
+    }
+  ` : ""}
+  ${previewFontUrl2 ? `
+    @font-face {
+      font-family: 'Font2';
+      src: url('${previewFontUrl2}');
+    }
+  ` : ""}
+`;
 
   // Font size controls
   const renderSizeControl = (label: string, key: keyof typeof sizes, min: number, max: number) => (
@@ -155,6 +260,7 @@ export default function FontsView() {
                       ref={fileInputRefs[idx]}
                       id={`font-file-${idx}`}
                       type="file"
+                      name={`fuente_${idx + 1}`}
                       accept=".ttf,.otf,.woff,.woff2"
                       onChange={e => handleFileChange(idx, e.target.files?.[0] || null)}
                       className="file:bg-green-600 file:hover:bg-green-700 file:text-white file:font-bold file:rounded file:border-none file:px-3 file:py-2 bg-[#23272e] border-2 border-green-500 text-gray-100 cursor-pointer w-56"
@@ -265,20 +371,40 @@ export default function FontsView() {
                       </td>
                     </tr>
                   )}
-                  {savedFonts.map((row, rowIdx) => (
-                    <tr key={rowIdx}>
-                      {row.fontFiles.map((file, idx) => (
-                        <td key={idx} className="px-2 py-2 text-center">
-                          {file ? (
-                            <span className="text-xs text-gray-300">{file.name}</span>
-                          ) : (
-                            <span className="text-xs text-gray-500">No seleccionado</span>
-                          )}
-                        </td>
-                      ))}
-                      <td className="px-2 py-2 text-center text-gray-300">{row.sizes.paragraph}</td>
-                      <td className="px-2 py-2 text-center text-gray-300">{row.sizes.subtitle}</td>
-                      <td className="px-2 py-2 text-center text-gray-300">{row.sizes.title}</td>
+                 {savedFonts.map((row, rowIdx) => {
+                  const fontUrl1 = row.fuente_1 ? `${FONT_BASE_URL}${row.fuente_1}` : null;
+                  const fontUrl2 = row.fuente_2 ? `${FONT_BASE_URL}${row.fuente_2}` : null;
+                  return (
+                    <tr key={row.id}>
+                      <td className="px-2 py-2 text-center">
+                        {row.fuente_1}
+                        {fontUrl1 && (
+                          <a
+                            href={fontUrl1}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="ml-2 text-green-400 underline"
+                          >
+                            Ver fuente
+                          </a>
+                        )}
+                      </td>
+                      <td className="px-2 py-2 text-center">
+                        {row.fuente_2}
+                        {fontUrl2 && (
+                          <a
+                            href={fontUrl2}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="ml-2 text-green-400 underline"
+                          >
+                            Ver fuente
+                          </a>
+                        )}
+                      </td>
+                      <td className="px-2 py-2 text-center text-gray-300">{row.tamano_1}</td>
+                      <td className="px-2 py-2 text-center text-gray-300">{row.tamano_2}</td>
+                      <td className="px-2 py-2 text-center text-gray-300">{row.tamano_3}</td>
                       <td className="px-2 py-2 flex gap-2 justify-center">
                         <button
                           type="button"
@@ -290,7 +416,7 @@ export default function FontsView() {
                         </button>
                         <button
                           type="button"
-                          onClick={() => handleDelete(rowIdx)}
+                          onClick={() => handleDelete(row.id)}
                           className="p-1 rounded hover:bg-red-700"
                           title="Eliminar"
                         >
@@ -298,7 +424,8 @@ export default function FontsView() {
                         </button>
                       </td>
                     </tr>
-                  ))}
+                  );
+                })}
                 </tbody>
               </table>
             </div>

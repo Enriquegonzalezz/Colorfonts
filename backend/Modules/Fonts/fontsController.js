@@ -37,7 +37,7 @@ class FontsController {
             tamano_3: req.body.tamano_3 || null,
             predeterminado: req.body.predeterminado || 0
             };
-            const newFont = await FontsModel.createFont(id, req.body);
+            const newFont = await FontsModel.createFont(id, fontData);
             return res.status(201).json(newFont);
         } catch (error) {
             console.error(error);
@@ -51,8 +51,14 @@ class FontsController {
             return res.status(401).json({ message: "El usuario no está autorizado." });
         }
         const { id } = req.params;
+        console.log(req.body['tamano_1']);
         try {
-            const updatedFont = await FontsModel.updateFont(id, req.body);
+            const fontData = {
+            tamano_1: req.body.tamano_1 ? Number(req.body.tamano_1) : null,
+            tamano_2: req.body.tamano_2 ? Number(req.body.tamano_2) : null,
+            tamano_3: req.body.tamano_3 ? Number(req.body.tamano_3) : null,
+             };
+            const updatedFont = await FontsModel.updateFont(id, fontData);
             if (!updatedFont) {
                 return res.status(404).json({ error: 'Fuente no encontrada' });
             }

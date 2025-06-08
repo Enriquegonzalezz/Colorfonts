@@ -5,7 +5,7 @@ const path = require('path');
 class FontsModel {
     static async getFontsById(id) {
         try {
-            const fonts = await Fuentes.findOne({ where: { id_usuario: id } });
+            const fonts = await Fuentes.findAll({ where: { id_usuario: id } });
             return fonts;
         } catch (error) {
             throw new Error(`Error retrieving fonts for user ${id}: ${error}`);
