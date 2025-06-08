@@ -25,16 +25,18 @@ class UsersController {
     }
 
     login = async (req, res) => {
+        console.log("controlador login")
         const result = validateLogin(req.body)
         if (!result.success) {
-          return res.status(400).json({ error: JSON.parse(result.error.message) })
+            console.log("error en validación de login");
+            return res.status(400).json({ error: JSON.parse(result.error.message) })
         }
         
         const usuario = result.data
         try {
             const response = await UsersModel.login({ usuario })
             return res.status(200).json({
-                message: `El usuario ${response.username} ha iniciado sesión exitosamente`,
+                message: `El usuario ${response.email} ha iniciado sesión exitosamente`,
                 token: response.token
             })
         } catch (error) {
@@ -68,7 +70,8 @@ class UsersController {
             });
             //console.log(decoded);
             const id = decoded.id;
-            return { valid: true , id: id };
+            const admin = decoded.admin || 0; 
+            return { valid: true , id: id , admin: admin};
     
         } catch (err) {
             console.log(err);

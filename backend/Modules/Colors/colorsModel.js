@@ -5,7 +5,7 @@ const { tr } = require('zod/v4/locales');
 class ColorsModel {
     static async getColorsById(id) {
         try {
-            const colors = await Colores.findOne({ where: { id_usuario: id } });
+            const colors = await Colores.findAll({ where: { id_usuario: id } });
             return colors;
         } catch (error) {
             throw new Error(`Error retrieving colors for user ${id}: ${error}`);

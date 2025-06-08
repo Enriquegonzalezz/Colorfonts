@@ -2,10 +2,38 @@ import { Button } from "./ui/button";
 import { buttonVariants } from "./ui/button";
 import { HeroCards } from "./HeroCards";
 import { GitHubLogoIcon } from "@radix-ui/react-icons";
-import { useNavigate } from "react-router-dom"; // Usa useNavigate de react-router-dom
+import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import axios from "axios"; // Usa useNavigate de react-router-dom
 
 export const Hero = () => {
   const navigate = useNavigate();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+  const token = localStorage.getItem("access_token");
+  if (!token) {
+    setIsLoggedIn(false);
+    setIsAdmin(false);
+    return;
+  }
+
+  axios
+    .get("http://localhost:3000/auth", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+    .then((res) => {
+      setIsLoggedIn(true);
+      setIsAdmin(res.data.admin === 1); // Ajusta según la respuesta de tu backend
+    })
+    .catch(() => {
+      setIsLoggedIn(false);
+      setIsAdmin(false);
+    });
+}, []);
 
   const gotocolors = () => {
     navigate("/colors");
@@ -39,6 +67,9 @@ export const Hero = () => {
         </p>
 
         <div className="space-y-4 md:space-y-0 md:space-x-4 flex flex-col md:flex-row">
+          
+          {isLoggedIn && isAdmin && (
+            <>
           <Button className="w-full md:w-1/3" onClick={gotocolors}>
             Go to colors
           </Button>
@@ -53,6 +84,8 @@ export const Hero = () => {
             Go to Fonts
             <GitHubLogoIcon className="ml-2 w-5 h-5" />
           </Button>
+          </>
+          )}
         </div>
       </div>
 

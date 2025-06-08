@@ -5,7 +5,7 @@ const { createColorsRouter } = require("./Modules/Colors/colorsRoutes");
 const { createFontsRouter } = require("./Modules/Fonts/fontsRoutes");
 require('dotenv/config');
 const sequelize = require("./db/database");
-//server
+const cors = require('cors');
 const app = express();
 
 app.use(cors());

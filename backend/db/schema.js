@@ -18,6 +18,10 @@ Usuarios.init({
         type: DataTypes.STRING,
         allowNull: false
     },
+    admin: {
+        type: DataTypes.TINYINT,
+        defaultValue: 0
+    },
 },{
     sequelize,
     timestamps: false,

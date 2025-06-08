@@ -1,9 +1,11 @@
 // src/pages/Signup.tsx
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Navbar } from "./components/Navbar";
 import { Button } from "./components/ui/button";
 import { Input } from "./components/ui/input";
+import axios from "axios";
 
 export default function SignupView() {
   const [formData, setFormData] = useState({
@@ -13,6 +15,7 @@ export default function SignupView() {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -28,13 +31,15 @@ export default function SignupView() {
     setError("");
 
     try {
-      // Aquí iría la llamada a tu API de registro
-      console.log("Signup data:", formData);
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      // Redirigir después del registro
-      // navigate('/dashboard');
+      const response = await axios.post("http://localhost:3000/register", {
+        username: formData.username,
+        email: formData.email,
+        password: formData.password,
+      });
+      
+      navigate('/login');
     } catch (err) {
-      setError("Registration failed. Please try again.");
+      setError("Ya existe una cuenta con ese email.");
     } finally {
       setIsLoading(false);
     }

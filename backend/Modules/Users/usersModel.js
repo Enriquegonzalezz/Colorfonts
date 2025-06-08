@@ -19,7 +19,6 @@ class UsersModel {
             const existingUser = await Usuarios.findOne({
                 where: {
                     [Op.or]: [
-                        { username },
                         { email }
                     ]
                 }
@@ -44,13 +43,13 @@ class UsersModel {
 
     static async login({ usuario }) {
         const {
-            username,
+            email,
             password
         } = usuario;
         try {
-            const user = await Usuarios.findOne({ where: { username } });
+            const user = await Usuarios.findOne({ where: { email } });
             if (!user) {
-                throw new Error(`El usuario ${username} no existe.`);
+                throw new Error(`El usuario ${email} no existe.`);
             }
             const isValid = await bcrypt.compare(password, user.password);
             if (!isValid) {
@@ -58,19 +57,18 @@ class UsersModel {
             }
 
             const token = jwt.sign(
-                { username: user.username, email: user.email, id: user.id },
+                { email: user.email, id: user.id, admin: user.admin },
                 SECRET_JWT_KEY,
                 {
                     expiresIn: "1h"
                 }
             );
             return {
-                username: user.username,
                 email: user.email,
                 token: token
             };
         } catch (error) {
-            throw new Error(`Error al buscar el usuario ${username}: ${error.message}`);
+            throw new Error(`Error al buscar el usuario ${email}: ${error.message}`);
         }
     }
 
