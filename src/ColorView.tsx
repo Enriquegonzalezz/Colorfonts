@@ -5,6 +5,9 @@ import { Pencil, Trash2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "./components/ui/avatar";
 import { Badge } from "./components/ui/badge";
 import { Button } from "./components/ui/button";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const defaultColors = ["#000000", "#FFFFFF", "#F596D3", "#D247BF", "#61DAFB"];
 
@@ -83,8 +86,28 @@ function HeroCardPreview({ colors }: { colors: string[] }) {
 
 export default function ColorView() {
   const [colors, setColors] = useState<string[]>(defaultColors);
-  const [savedColors, setSavedColors] = useState<string[][]>([]);
+  const [savedColors, setSavedColors] = useState<any[]>([]);
   const [editRow, setEditRow] = useState<number | null>(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+  const fetchColors = async () => {
+    try {
+      const token = localStorage.getItem("access_token");
+      const res = await axios.get("http://localhost:3000/colors", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setSavedColors(res.data); 
+    } catch (error) {
+      console.error("Error al obtener los colores:", error);
+      navigate("/login");
+    }
+  };
+
+  fetchColors();
+}, []);
 
   const handleColorChange = (index: number, value: string) => {
     const newColors = [...colors];
@@ -92,28 +115,87 @@ export default function ColorView() {
     setColors(newColors);
   };
 
-  const handleSave = () => {
-    setSavedColors((prev) => [...prev, [...colors]]);
+  const handleSave = async () => {
+    try {
+    const token = localStorage.getItem("access_token");
+    await axios.post(
+      "http://localhost:3000/colors/store",
+      {
+        color_1: colors[0],
+        color_2: colors[1],
+        color_3: colors[2],
+        color_4: colors[3],
+        color_5: colors[4],
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    const res = await axios.get("http://localhost:3000/colors", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+setSavedColors(res.data);
+  } catch (error) {
+    navigate("/login");
+    console.error("Error al guardar los colores:", error);
+  }
   };
 
-  const handleDelete = (rowIdx: number) => {
-    setSavedColors((prev) => prev.filter((_, idx) => idx !== rowIdx));
-  };
+  const handleDelete = async (colorId: number) => {
+  try {
+    const token = localStorage.getItem("access_token");
+    await axios.delete(`http://localhost:3000/colors/delete/${colorId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    setSavedColors((prev) => prev.filter((row) => row.id !== colorId));
+  } catch (error) {
+    navigate("/login");
+    console.error("Error al eliminar el color:", error);
+  }
+};
 
   const handleEdit = (rowIdx: number) => {
     setEditRow(rowIdx);
     setColors([...savedColors[rowIdx]]);
   };
 
-  const handleUpdate = () => {
-    if (editRow !== null) {
-      setSavedColors((prev) =>
-        prev.map((row, idx) => (idx === editRow ? [...colors] : row))
+  const handleUpdate = async () => {
+  if (editRow !== null) {
+    try {
+      const token = localStorage.getItem("access_token");
+      const colorId = savedColors[editRow].id;
+      await axios.put(
+        `http://localhost:3000/colors/update/${colorId}`,
+        {
+          color_1: colors[0],
+          color_2: colors[1],
+          color_3: colors[2],
+          color_4: colors[3],
+          color_5: colors[4],
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
+      // Refresca la lista de colores
+      const res = await axios.get("http://localhost:3000/colors", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setSavedColors(res.data);
       setEditRow(null);
       setColors(defaultColors);
+    } catch (error) {
+      navigate("/login");
+      console.error("Error al actualizar los colores:", error);
     }
-  };
+  }
+};
 
   return (
     <>
@@ -137,6 +219,7 @@ export default function ColorView() {
                       <input
                         type="color"
                         id={`color-${index}`}
+                        name={`color_${index + 1}`}
                         value={color}
                         onChange={(e) => handleColorChange(index, e.target.value)}
                         className="w-8 h-8 rounded-full shadow-inner border-2 border-green-500 bg-[#23272e] cursor-pointer"
@@ -199,8 +282,8 @@ export default function ColorView() {
                     </tr>
                   )}
                   {savedColors.map((row, rowIdx) => (
-                    <tr key={rowIdx}>
-                      {row.map((color, idx) => (
+                    <tr key={row.id}>
+                      {[row.color_1,row.color_2,row.color_3,row.color_4,row.color_5].map((color, idx) => (
                         <td key={idx} className="px-2 py-2 text-center">
                           <span
                             className="inline-block w-6 h-6 rounded-full border-2 border-green-500"
@@ -219,7 +302,7 @@ export default function ColorView() {
                           <Pencil className="w-4 h-4 text-green-400" />
                         </button>
                         <button
-                          onClick={() => handleDelete(rowIdx)}
+                          onClick={() => handleDelete(row.id)}
                           className="p-1 rounded hover:bg-red-700"
                           title="Eliminar"
                         >

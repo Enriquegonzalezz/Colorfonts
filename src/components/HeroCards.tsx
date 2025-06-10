@@ -12,47 +12,92 @@ import {
 import { Check, Linkedin } from "lucide-react";
 import { LightBulbIcon } from "./Icons";
 import { GitHubLogoIcon } from "@radix-ui/react-icons";
+import axios from "axios"; 
+import { useEffect, useState } from "react";
+
+
+const defaultColors = ["#000000", "#FFFFFF", "#F596D3", "#D247BF", "#61DAFB"];
+
 
 export const HeroCards = () => {
+  const [colors, setColors] = useState<string[]>(defaultColors);
+
+  // Cuando obtienes los colores del backend:
+    useEffect(() => {
+      const fetchColors = async () => {
+        try {
+          const token = localStorage.getItem("access_token");
+          const res = await axios.get("http://localhost:3000/colors/predeterminado", {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          console.log(res.data);
+          if (res.data) {
+            console.log("entre");
+            setColors([
+              res.data.color_1,
+              res.data.color_2,
+              res.data.color_3,
+              res.data.color_4,
+              res.data.color_5,
+            ]);
+            console.log(res.data.color_1);
+            console.log(res.data.color_2);
+            console.log(res.data.color_3);
+            console.log(res.data.color_4);
+            console.log(res.data.color_5);
+          }
+        } catch (error) {
+          console.error("Error al obtener los colores:", error);
+        }
+      };
+  
+      fetchColors();
+    }, []);
   return (
     <div className="hidden lg:flex flex-row flex-wrap gap-8 relative w-[700px] h-[500px]">
       {/* Testimonial */}
-      <Card className="absolute w-[340px] -top-[15px] drop-shadow-xl shadow-black/10 dark:shadow-white/10">
+      <Card
+        className="absolute w-[340px] -top-[15px] drop-shadow-xl"
+        style={{
+          background: colors[3], // amarillo
+          color: colors[0], // negro
+          boxShadow: `0 4px 32px 0 ${colors[4]}44`,
+          border: `2px solid ${colors[2]}`,
+        }}
+      >
         <CardHeader className="flex flex-row items-center gap-4 pb-2">
           <Avatar>
-            <AvatarImage
-              alt=""
-              src="https://github.com/"
-            />
-            <AvatarFallback>EG</AvatarFallback>
+            <AvatarImage alt="" src="https://github.com/" />
+            <AvatarFallback style={{ background: colors[2], color: colors[1] }}>EG</AvatarFallback>
           </Avatar>
-
           <div className="flex flex-col">
-            <CardTitle className="text-lg">Enrique Gonzalez</CardTitle>
-            <CardDescription>@kikegonza</CardDescription>
+            <CardTitle className="text-lg" style={{ color: colors[2] }}>Enrique Gonzalez</CardTitle>
+            <CardDescription style={{ color: colors[0] }}>@kikegonza</CardDescription>
           </div>
         </CardHeader>
-
-        <CardContent>Funciona perfecto!</CardContent>
+        <CardContent style={{ color: colors[0] }}>Funciona perfecto!</CardContent>
       </Card>
 
       {/* Team */}
-      <Card className="absolute right-[20px] top-4 w-80 flex flex-col justify-center items-center drop-shadow-xl shadow-black/10 dark:shadow-white/10">
+      <Card
+        className="absolute right-[20px] top-4 w-80 flex flex-col justify-center items-center drop-shadow-xl"
+        style={{
+          background: colors[1], // blanco
+          color: colors[0], // negro
+          boxShadow: `0 4px 32px 0 ${colors[4]}44`,
+          border: `2px solid ${colors[2]}`,
+        }}
+      >
         <CardHeader className="mt-8 flex justify-center items-center pb-2">
-        
-          <CardTitle className="text-center">samuel molina</CardTitle>
-          <CardDescription className="font-normal text-primary">
-            
-          </CardDescription>
+          <CardTitle className="text-center" style={{ color: colors[2] }}>samuel molina</CardTitle>
+          <CardDescription className="font-normal" style={{ color: colors[0] }}></CardDescription>
         </CardHeader>
-
-        <CardContent className="text-center pb-2">
+        <CardContent className="text-center pb-2" style={{ color: colors[0] }}>
           <p>
             Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do
             eiusmod tempor incididunt ut labore et dolore magna aliqua.
           </p>
         </CardContent>
-
         <CardFooter>
           <div>
             <a
@@ -63,6 +108,7 @@ export const HeroCards = () => {
                 variant: "ghost",
                 size: "sm",
               })}
+              style={{ color: colors[2] }}
             >
               <span className="sr-only">Github icon</span>
               <GitHubLogoIcon className="w-5 h-5" />
@@ -75,6 +121,7 @@ export const HeroCards = () => {
                 variant: "ghost",
                 size: "sm",
               })}
+              style={{ color: colors[2] }}
             >
               <span className="sr-only">X icon</span>
               <svg
@@ -87,7 +134,6 @@ export const HeroCards = () => {
                 <path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z" />
               </svg>
             </a>
-
             <a
               rel="noreferrer noopener"
               href="https://www.linkedin.com/in/leopoldo-miranda/"
@@ -96,6 +142,7 @@ export const HeroCards = () => {
                 variant: "ghost",
                 size: "sm",
               })}
+              style={{ color: colors[2] }}
             >
               <span className="sr-only">Linkedin icon</span>
               <Linkedin size="20" />
@@ -105,52 +152,64 @@ export const HeroCards = () => {
       </Card>
 
       {/* Pricing */}
-      <Card className="absolute top-[150px] left-[50px] w-72  drop-shadow-xl shadow-black/10 dark:shadow-white/10">
+      <Card
+        className="absolute top-[150px] left-[50px] w-72 drop-shadow-xl"
+        style={{
+          background: colors[3], // amarillo
+          color: colors[0], // negro
+          boxShadow: `0 4px 32px 0 ${colors[4]}44`,
+          border: `2px solid ${colors[2]}`,
+        }}
+      >
         <CardHeader>
-          <CardTitle className="flex item-center justify-between">
+          <CardTitle className="flex item-center justify-between" style={{ color: colors[2] }}>
             Gratis
             <Badge
               variant="secondary"
-              className="text-sm text-primary"
+              className="text-sm"
+              style={{
+                background: colors[2],
+                color: colors[1],
+                border: `1px solid ${colors[4]}`
+              }}
             >
               el mas popular
             </Badge>
           </CardTitle>
           <div>
-            <span className="text-3xl font-bold">$0</span>
-            <span className="text-muted-foreground"> /month</span>
+            <span className="text-3xl font-bold" style={{ color: colors[0] }}>$0</span>
+            <span className="text-muted-foreground" style={{ color: colors[2] }}> /month</span>
           </div>
-
-          <CardDescription>
+          <CardDescription style={{ color: colors[0] }}>
             Lorem ipsum dolor sit, amet ipsum consectetur adipisicing elit.
           </CardDescription>
         </CardHeader>
-
         <CardContent>
-          <Button className="w-full">eempezar prueba ahora</Button>
+          <Button
+            className="w-full"
+            style={{
+              background: colors[2],
+              color: colors[1],
+              border: `2px solid ${colors[0]}`
+            }}
+          >
+            empezar prueba ahora
+          </Button>
         </CardContent>
-
-        <hr className="w-4/5 m-auto mb-4" />
-
+        <hr className="w-4/5 m-auto mb-4" style={{ borderColor: colors[4] }} />
         <CardFooter className="flex">
           <div className="space-y-4">
             {["4 Team member", "4 GB Storage", "Upto 6 pages"].map(
               (benefit: string) => (
-                <span
-                  key={benefit}
-                  className="flex"
-                >
-                  <Check className="text-green-500" />{" "}
-                  <h3 className="ml-2">{benefit}</h3>
+                <span key={benefit} className="flex">
+                  <Check style={{ color: colors[2] }} />{" "}
+                  <h3 className="ml-2" style={{ color: colors[0] }}>{benefit}</h3>
                 </span>
               )
             )}
           </div>
         </CardFooter>
       </Card>
-
-      {/* Service */}
-      
     </div>
   );
 };

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   NavigationMenu,
   NavigationMenuItem,
@@ -44,6 +44,16 @@ const routeList: RouteProps[] = [
 
 export const Navbar = () => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+
+  useEffect(() => {
+    setIsLoggedIn(!!localStorage.getItem("access_token"));
+  }, []);
+  const handleLogout = () => {
+    localStorage.removeItem("access_token");
+    setIsLoggedIn(false);
+    window.location.href = "/"; // o "/" si prefieres ir al home
+  };
   return (
     <header className="sticky border-b-[1px] top-0 z-40 w-full bg-white dark:border-b-slate-700 dark:bg-background">
       <NavigationMenu className="mx-auto">
@@ -127,15 +137,22 @@ export const Navbar = () => {
           </nav>
 
           <div className="hidden md:flex gap-2">
-            <a
-              rel="noreferrer noopener"
-              href="/login"
-              target="_blank"
-              className={`border ${buttonVariants({ variant: "secondary" })}`}
-            >
-              
-              Log In
-            </a>
+            {isLoggedIn ? (
+              <button
+                onClick={handleLogout}
+                className={`border ${buttonVariants({ variant: "secondary" })}`}
+              >
+                Logout
+              </button>
+            ) : (
+              <a
+                rel="noreferrer noopener"
+                href="/login"
+                className={`border ${buttonVariants({ variant: "secondary" })}`}
+              >
+                Log In
+              </a>
+            )}
 
             <ModeToggle />
           </div>

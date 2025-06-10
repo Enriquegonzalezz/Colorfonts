@@ -1,13 +1,16 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Navbar } from "./components/Navbar";
 import { Button } from "./components/ui/button";
 import { Input } from "./components/ui/input";
+import axios from "axios";
 
 export default function LoginView() {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     const { name, value } = e.target;
@@ -23,22 +26,25 @@ export default function LoginView() {
     setError(null);
 
     try {
-      // Simula llamada a backend (reemplaza con tu lógica real)
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      const response = await axios.post("http://localhost:3000/login", {
+        email: formData.email,
+        password: formData.password,
+      });
 
-      // Validación ficticia de ejemplo
-      if (formData.email === "test@example.com" && formData.password === "123456") {
-        alert("Login exitoso");
-        // Aquí podrías redirigir o actualizar estado global
-      } else {
-        throw new Error("Credenciales inválidas");
-      }
-    } catch (err: any) {
-      setError(err.message || "Error al iniciar sesión.");
-    } finally {
+      localStorage.setItem("access_token", response.data.token);
+      navigate("/");
       setIsLoading(false);
+      alert("Login exitoso: " + response.data.message);
+    } catch (err: any) {
+      if (err.response && err.response.status === 400) {
+        setError("Ocurrió un error inesperado. Inténtalo de nuevo.");
+      } else {
+        setError("Usuario o contraseña incorrectos, vuelva a intentarlo.");
+        setIsLoading(false);
+        console.error(err);
+      }
     }
-  }
+  }  
 
   return (
     <>
