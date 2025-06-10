@@ -4,6 +4,25 @@ const {UsersController} = require('../Users/usersController');
 const usuariosController = new UsersController();
 
 class FontsController {
+    updateFontPre = async (req, res) => {
+        const isAuthenticated = await usuariosController.auth(req);
+        if (!isAuthenticated.valid) {
+            return res.status(401).json({ message: "El usuario no está autorizado." });
+        }
+        const { id } = req.params;
+        const id_usuario = isAuthenticated.id;
+        try {
+            const updatedFont = await FontsModel.updateFontPre(id, id_usuario);
+            if (!updatedFont) {
+                return res.status(404).json({ error: 'Fuente no encontrada' });
+            }
+            return res.json(updatedFont);
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({ error: 'Error updating default font' });
+        }
+    }
+
     getFontPredeterminado = async (req, res) => {
         try {
             const font = await FontsModel.getFontPredeterminado();
@@ -15,7 +34,7 @@ class FontsController {
             console.error(error);
             return res.status(500).json({ error: 'Error retrieving default font' });
         }
-    }
+    } 
 
     getFonts = async (req, res) => {
         const isAuthenticated = await usuariosController.auth(req);

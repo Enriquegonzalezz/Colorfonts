@@ -20,6 +20,7 @@ export default function FontsView() {
     tamano_1: number;
     tamano_2: number;
     tamano_3: number;
+    predeterminado: number;
   };
 
   const [savedFonts, setSavedFonts] = useState<FontRow[]>([]);
@@ -247,46 +248,15 @@ export default function FontsView() {
   const handleToggleDefault = async (fontId: number) => {
     try {
       const token = localStorage.getItem("access_token");
-      
-      if (defaultFontId === fontId) {
-        // Si ya es el predeterminado, lo quitamos
-        await axios.put(
-          `http://localhost:3000/fonts/update-default/${fontId}`,
-          { is_default: false },
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        setDefaultFontId(null);
-      } else {
-        // Si hay un predeterminado anterior, lo quitamos primero
-        if (defaultFontId !== null) {
-          await axios.put(
-            `http://localhost:3000/fonts/update-default/${defaultFontId}`,
-            { is_default: false },
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            }
-          );
+      await axios.put(
+        `http://localhost:3000/fonts/update/predeterminado/${fontId}`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
-        
-        // Establecemos el nuevo predeterminado
-        await axios.put(
-          `http://localhost:3000/fonts/update-default/${fontId}`,
-          { is_default: true },
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        setDefaultFontId(fontId);
-      }
-
+      );
       // Refrescar la lista de fuentes
       const res = await axios.get("http://localhost:3000/fonts", {
         headers: { Authorization: `Bearer ${token}` },
@@ -468,22 +438,26 @@ export default function FontsView() {
                         <td className="px-2 py-2 text-center text-gray-300">{row.tamano_3}</td>
                         <td className="px-2 py-2 text-center">
                           <button
-                            onClick={() => handleToggleDefault(row.id)}
-                            className={`p-1 rounded transition-colors ${
-                              defaultFontId === row.id 
-                                ? 'bg-yellow-500/20 hover:bg-yellow-500/30' 
-                                : 'hover:bg-gray-700'
-                            }`}
-                            title={defaultFontId === row.id ? "Quitar predeterminado" : "Establecer como predeterminado"}
-                          >
-                            <Star 
-                              className={`w-4 h-4 ${
-                                defaultFontId === row.id 
-                                  ? 'text-yellow-400 fill-yellow-400' 
-                                  : 'text-gray-400'
-                              }`} 
-                            />
-                          </button>
+                        onClick={() => {
+                          if (row.predeterminado !== 1) handleToggleDefault(row.id);
+                        }}
+                        className={`p-1 rounded transition-colors ${
+                          row.predeterminado === 1
+                            ? 'bg-yellow-500/20 hover:bg-yellow-500/30'
+                            : 'hover:bg-gray-700'
+                        }`}
+                        title={row.predeterminado === 1 ? "Predeterminado" : "Establecer como predeterminado"}
+                        disabled={row.predeterminado === 1}
+                        style={row.predeterminado === 1 ? { cursor: "default" } : {}}
+                      >
+                        <Star
+                          className={`w-4 h-4 ${
+                            row.predeterminado === 1
+                              ? 'text-yellow-400 fill-yellow-400'
+                              : 'text-gray-400'
+                          }`}
+                        />
+                      </button>
                         </td>
                         <td className="px-2 py-2 flex gap-2 justify-center">
                           <button

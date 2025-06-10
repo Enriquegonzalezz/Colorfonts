@@ -10,6 +10,7 @@ const createFontsRouter = () => {
     fontsRouter.get('/predeterminado', fontsController.getFontPredeterminado);
     fontsRouter.post('/store', uploadFuente.fields([{ name: 'fuente_1' }, { name: 'fuente_2' }]), fontsController.createFont);
     fontsRouter.put('/update/:id', fontsController.updateFont);
+    fontsRouter.put('/update/predeterminado/:id', fontsController.updateFontPre);
     fontsRouter.delete('/delete/:id', fontsController.deleteFont);
 
     return fontsRouter;

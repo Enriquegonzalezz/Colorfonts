@@ -3,6 +3,20 @@ const fs = require('fs');
 const path = require('path');
 
 class FontsModel {
+    static async updateFontPre(id, id_usuario) {
+        try {
+            // Set all fonts for the user to not default
+            const [updated] = await Fuentes.update({ predeterminado: 0 }, { where: { id_usuario: id_usuario } });
+            if (updated) {
+                // Set the specified font as default
+                return await Fuentes.update({ predeterminado: 1 }, { where: { id: id } });
+            }
+            return null;
+        } catch (error) {
+            throw new Error(`Error updating default font for font ${id}: ${error}`);
+        }
+    }
+
     static async getFontPredeterminado() {
         try {
             const font = await Fuentes.findOne({ where: { predeterminado: 1 } });

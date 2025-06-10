@@ -142,7 +142,7 @@ export default function ColorView() {
     const res = await axios.get("http://localhost:3000/colors", {
       headers: { Authorization: `Bearer ${token}` },
     });
-setSavedColors(res.data);
+    setSavedColors(res.data);
   } catch (error) {
     navigate("/login");
     console.error("Error al guardar los colores:", error);
@@ -206,45 +206,16 @@ setSavedColors(res.data);
   const handleToggleDefault = async (colorId: number) => {
     try {
       const token = localStorage.getItem("access_token");
-      
-      if (defaultColorId === colorId) {
-        // Si ya es el predeterminado, lo quitamos
         await axios.put(
-          `http://localhost:3000/colors/update-default/${colorId}`,
-          { is_default: false },
+          `http://localhost:3000/colors/update/predeterminado/${colorId}`,
+          {},
           {
             headers: {
               Authorization: `Bearer ${token}`,
             },
           }
         );
-        setDefaultColorId(null);
-      } else {
-        // Si hay un predeterminado anterior, lo quitamos primero
-        if (defaultColorId !== null) {
-          await axios.put(
-            `http://localhost:3000/colors/update-default/${defaultColorId}`,
-            { is_default: false },
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            }
-          );
-        }
-        
-        // Establecemos el nuevo predeterminado
-        await axios.put(
-          `http://localhost:3000/colors/update-default/${colorId}`,
-          { is_default: true },
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        setDefaultColorId(colorId);
-      }
+       
 
       // Refrescar la lista de colores
       const res = await axios.get("http://localhost:3000/colors", {
@@ -356,22 +327,26 @@ setSavedColors(res.data);
                       ))}
                       <td className="px-2 py-2 text-center">
                         <button
-                          onClick={() => handleToggleDefault(row.id)}
-                          className={`p-1 rounded transition-colors ${
-                            defaultColorId === row.id 
-                              ? 'bg-yellow-500/20 hover:bg-yellow-500/30' 
-                              : 'hover:bg-gray-700'
+                        onClick={() => {
+                          if (row.predeterminado !== 1) handleToggleDefault(row.id);
+                        }}
+                        className={`p-1 rounded transition-colors ${
+                          row.predeterminado === 1
+                            ? 'bg-yellow-500/20 hover:bg-yellow-500/30'
+                            : 'hover:bg-gray-700'
+                        }`}
+                        title={row.predeterminado === 1 ? "Predeterminado" : "Establecer como predeterminado"}
+                        disabled={row.predeterminado === 1}
+                        style={row.predeterminado === 1 ? { cursor: "default" } : {}}
+                      >
+                        <Star
+                          className={`w-4 h-4 ${
+                            row.predeterminado === 1
+                              ? 'text-yellow-400 fill-yellow-400'
+                              : 'text-gray-400'
                           }`}
-                          title={defaultColorId === row.id ? "Quitar predeterminado" : "Establecer como predeterminado"}
-                        >
-                          <Star 
-                            className={`w-4 h-4 ${
-                              defaultColorId === row.id 
-                                ? 'text-yellow-400 fill-yellow-400' 
-                                : 'text-gray-400'
-                            }`} 
-                          />
-                        </button>
+                        />
+                      </button>
                       </td>
                       <td className="px-2 py-2 flex gap-2 justify-center">
                         <button
