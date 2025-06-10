@@ -1,7 +1,7 @@
 import useEmblaCarousel from "embla-carousel-react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useCallback } from "react";
-import Card08 from "./Card08";
+import Card08 from "../components/Card08";
 
 interface FeatureProps {
   title: string;

@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Navbar } from "./components/Navbar";
-import { Pencil, Trash2, ChevronUp, ChevronDown } from "lucide-react";
+import { Pencil, Trash2, ChevronUp, ChevronDown, Star } from "lucide-react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
@@ -9,6 +9,7 @@ export default function FontsView() {
   const [fontFiles, setFontFiles] = useState<(File | null)[]>([null, null]);
   const [fontUrls, setFontUrls] = useState<(string | null)[]>([null, null]);
   const [sizes, setSizes] = useState({ paragraph: 16, subtitle: 24, title: 32 });
+  const [defaultFontId, setDefaultFontId] = useState<number | null>(null);
   const navigate = useNavigate();
   const FONT_BASE_URL = "http://localhost:3000/public/fonts/";
 
@@ -35,8 +36,13 @@ export default function FontsView() {
         const res = await axios.get("http://localhost:3000/fonts", {
           headers: { Authorization: `Bearer ${token}` },
         });
-        // Si tu backend devuelve un solo objeto, usa [res.data]
-        setSavedFonts(Array.isArray(res.data) ? res.data : [res.data]);
+        const fonts = Array.isArray(res.data) ? res.data : [res.data];
+        setSavedFonts(fonts);
+        // Encontrar la fuente predeterminada
+        const defaultFont = fonts.find((font: any) => font.is_default);
+        if (defaultFont) {
+          setDefaultFontId(defaultFont.id);
+        }
       } catch (error) {
         navigate("/login");
         console.error("Error al obtener las fuentes:", error);
@@ -238,6 +244,60 @@ export default function FontsView() {
     </div>
   );
 
+  const handleToggleDefault = async (fontId: number) => {
+    try {
+      const token = localStorage.getItem("access_token");
+      
+      if (defaultFontId === fontId) {
+        // Si ya es el predeterminado, lo quitamos
+        await axios.put(
+          `http://localhost:3000/fonts/update-default/${fontId}`,
+          { is_default: false },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        setDefaultFontId(null);
+      } else {
+        // Si hay un predeterminado anterior, lo quitamos primero
+        if (defaultFontId !== null) {
+          await axios.put(
+            `http://localhost:3000/fonts/update-default/${defaultFontId}`,
+            { is_default: false },
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+        }
+        
+        // Establecemos el nuevo predeterminado
+        await axios.put(
+          `http://localhost:3000/fonts/update-default/${fontId}`,
+          { is_default: true },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        setDefaultFontId(fontId);
+      }
+
+      // Refrescar la lista de fuentes
+      const res = await axios.get("http://localhost:3000/fonts", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setSavedFonts(Array.isArray(res.data) ? res.data : [res.data]);
+    } catch (error) {
+      console.error("Error al actualizar el predeterminado:", error);
+      navigate("/login");
+    }
+  };
+
   return (
     <>
       <style>{fontFaceStyle}</style>
@@ -360,72 +420,92 @@ export default function FontsView() {
                     <th className="px-2 py-2 text-green-400 border-b border-green-500">Párrafo</th>
                     <th className="px-2 py-2 text-green-400 border-b border-green-500">Subtítulo</th>
                     <th className="px-2 py-2 text-green-400 border-b border-green-500">Título</th>
+                    <th className="px-2 py-2 text-green-400 border-b border-green-500">Predeterminado</th>
                     <th className="px-2 py-2 text-green-400 border-b border-green-500">Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
                   {savedFonts.length === 0 && (
                     <tr>
-                      <td colSpan={6} className="text-center text-gray-400 py-4">
+                      <td colSpan={7} className="text-center text-gray-400 py-4">
                         No hay selecciones guardadas.
                       </td>
                     </tr>
                   )}
-                 {savedFonts.map((row, rowIdx) => {
-                  const fontUrl1 = row.fuente_1 ? `${FONT_BASE_URL}${row.fuente_1}` : null;
-                  const fontUrl2 = row.fuente_2 ? `${FONT_BASE_URL}${row.fuente_2}` : null;
-                  return (
-                    <tr key={row.id}>
-                      <td className="px-2 py-2 text-center">
-                        {row.fuente_1}
-                        {fontUrl1 && (
-                          <a
-                            href={fontUrl1}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="ml-2 text-green-400 underline"
+                  {savedFonts.map((row, rowIdx) => {
+                    const fontUrl1 = row.fuente_1 ? `${FONT_BASE_URL}${row.fuente_1}` : null;
+                    const fontUrl2 = row.fuente_2 ? `${FONT_BASE_URL}${row.fuente_2}` : null;
+                    return (
+                      <tr key={row.id}>
+                        <td className="px-2 py-2 text-center">
+                          {row.fuente_1}
+                          {fontUrl1 && (
+                            <a
+                              href={fontUrl1}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="ml-2 text-green-400 underline"
+                            >
+                              Ver fuente
+                            </a>
+                          )}
+                        </td>
+                        <td className="px-2 py-2 text-center">
+                          {row.fuente_2}
+                          {fontUrl2 && (
+                            <a
+                              href={fontUrl2}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="ml-2 text-green-400 underline"
+                            >
+                              Ver fuente
+                            </a>
+                          )}
+                        </td>
+                        <td className="px-2 py-2 text-center text-gray-300">{row.tamano_1}</td>
+                        <td className="px-2 py-2 text-center text-gray-300">{row.tamano_2}</td>
+                        <td className="px-2 py-2 text-center text-gray-300">{row.tamano_3}</td>
+                        <td className="px-2 py-2 text-center">
+                          <button
+                            onClick={() => handleToggleDefault(row.id)}
+                            className={`p-1 rounded transition-colors ${
+                              defaultFontId === row.id 
+                                ? 'bg-yellow-500/20 hover:bg-yellow-500/30' 
+                                : 'hover:bg-gray-700'
+                            }`}
+                            title={defaultFontId === row.id ? "Quitar predeterminado" : "Establecer como predeterminado"}
                           >
-                            Ver fuente
-                          </a>
-                        )}
-                      </td>
-                      <td className="px-2 py-2 text-center">
-                        {row.fuente_2}
-                        {fontUrl2 && (
-                          <a
-                            href={fontUrl2}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="ml-2 text-green-400 underline"
+                            <Star 
+                              className={`w-4 h-4 ${
+                                defaultFontId === row.id 
+                                  ? 'text-yellow-400 fill-yellow-400' 
+                                  : 'text-gray-400'
+                              }`} 
+                            />
+                          </button>
+                        </td>
+                        <td className="px-2 py-2 flex gap-2 justify-center">
+                          <button
+                            type="button"
+                            onClick={() => handleEdit(rowIdx)}
+                            className="p-1 rounded hover:bg-green-700"
+                            title="Modificar"
                           >
-                            Ver fuente
-                          </a>
-                        )}
-                      </td>
-                      <td className="px-2 py-2 text-center text-gray-300">{row.tamano_1}</td>
-                      <td className="px-2 py-2 text-center text-gray-300">{row.tamano_2}</td>
-                      <td className="px-2 py-2 text-center text-gray-300">{row.tamano_3}</td>
-                      <td className="px-2 py-2 flex gap-2 justify-center">
-                        <button
-                          type="button"
-                          onClick={() => handleEdit(rowIdx)}
-                          className="p-1 rounded hover:bg-green-700"
-                          title="Modificar"
-                        >
-                          <Pencil className="w-4 h-4 text-green-400" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDelete(row.id)}
-                          className="p-1 rounded hover:bg-red-700"
-                          title="Eliminar"
-                        >
-                          <Trash2 className="w-4 h-4 text-red-400" />
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
+                            <Pencil className="w-4 h-4 text-green-400" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDelete(row.id)}
+                            className="p-1 rounded hover:bg-red-700"
+                            title="Eliminar"
+                          >
+                            <Trash2 className="w-4 h-4 text-red-400" />
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

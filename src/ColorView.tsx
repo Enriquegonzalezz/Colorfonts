@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Navbar } from "./components/Navbar";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, Star } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "./components/ui/avatar";
 import { Badge } from "./components/ui/badge";
 import { Button } from "./components/ui/button";
@@ -88,26 +88,32 @@ export default function ColorView() {
   const [colors, setColors] = useState<string[]>(defaultColors);
   const [savedColors, setSavedColors] = useState<any[]>([]);
   const [editRow, setEditRow] = useState<number | null>(null);
+  const [defaultColorId, setDefaultColorId] = useState<number | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-  const fetchColors = async () => {
-    try {
-      const token = localStorage.getItem("access_token");
-      const res = await axios.get("http://localhost:3000/colors", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      setSavedColors(res.data); 
-    } catch (error) {
-      console.error("Error al obtener los colores:", error);
-      navigate("/login");
-    }
-  };
+    const fetchColors = async () => {
+      try {
+        const token = localStorage.getItem("access_token");
+        const res = await axios.get("http://localhost:3000/colors", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setSavedColors(res.data);
+        // Encontrar el color predeterminado
+        const defaultColor = res.data.find((color: any) => color.is_default);
+        if (defaultColor) {
+          setDefaultColorId(defaultColor.id);
+        }
+      } catch (error) {
+        console.error("Error al obtener los colores:", error);
+        navigate("/login");
+      }
+    };
 
-  fetchColors();
-}, []);
+    fetchColors();
+  }, []);
 
   const handleColorChange = (index: number, value: string) => {
     const newColors = [...colors];
@@ -197,6 +203,60 @@ setSavedColors(res.data);
   }
 };
 
+  const handleToggleDefault = async (colorId: number) => {
+    try {
+      const token = localStorage.getItem("access_token");
+      
+      if (defaultColorId === colorId) {
+        // Si ya es el predeterminado, lo quitamos
+        await axios.put(
+          `http://localhost:3000/colors/update-default/${colorId}`,
+          { is_default: false },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        setDefaultColorId(null);
+      } else {
+        // Si hay un predeterminado anterior, lo quitamos primero
+        if (defaultColorId !== null) {
+          await axios.put(
+            `http://localhost:3000/colors/update-default/${defaultColorId}`,
+            { is_default: false },
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+        }
+        
+        // Establecemos el nuevo predeterminado
+        await axios.put(
+          `http://localhost:3000/colors/update-default/${colorId}`,
+          { is_default: true },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        setDefaultColorId(colorId);
+      }
+
+      // Refrescar la lista de colores
+      const res = await axios.get("http://localhost:3000/colors", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setSavedColors(res.data);
+    } catch (error) {
+      console.error("Error al actualizar el predeterminado:", error);
+      navigate("/login");
+    }
+  };
+
   return (
     <>
       <Navbar />
@@ -270,13 +330,14 @@ setSavedColors(res.data);
                         Color {idx + 1}
                       </th>
                     ))}
+                    <th className="px-2 py-2 text-green-400 border-b border-green-500">Predeterminado</th>
                     <th className="px-2 py-2 text-green-400 border-b border-green-500">Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
                   {savedColors.length === 0 && (
                     <tr>
-                      <td colSpan={6} className="text-center text-gray-400 py-4">
+                      <td colSpan={7} className="text-center text-gray-400 py-4">
                         No hay selecciones guardadas.
                       </td>
                     </tr>
@@ -293,6 +354,25 @@ setSavedColors(res.data);
                           <span className="ml-2 text-xs text-gray-300">{color}</span>
                         </td>
                       ))}
+                      <td className="px-2 py-2 text-center">
+                        <button
+                          onClick={() => handleToggleDefault(row.id)}
+                          className={`p-1 rounded transition-colors ${
+                            defaultColorId === row.id 
+                              ? 'bg-yellow-500/20 hover:bg-yellow-500/30' 
+                              : 'hover:bg-gray-700'
+                          }`}
+                          title={defaultColorId === row.id ? "Quitar predeterminado" : "Establecer como predeterminado"}
+                        >
+                          <Star 
+                            className={`w-4 h-4 ${
+                              defaultColorId === row.id 
+                                ? 'text-yellow-400 fill-yellow-400' 
+                                : 'text-gray-400'
+                            }`} 
+                          />
+                        </button>
+                      </td>
                       <td className="px-2 py-2 flex gap-2 justify-center">
                         <button
                           onClick={() => handleEdit(rowIdx)}
