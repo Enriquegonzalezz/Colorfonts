@@ -6,6 +6,7 @@ const usuariosController = new UsersController();
 
 class ColorsController {
     getColorPredeterminado = async (req, res) => {
+        console.log("getColorPredeterminado");
         try {
             const color = await ColorsModel.getColorPredeterminado();
             if (!color) {

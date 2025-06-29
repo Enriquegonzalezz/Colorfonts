@@ -3,7 +3,7 @@ const { Op } = require('sequelize');
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { SALT_ROUNDS, SECRET_JWT_KEY } = require("../../config");
-const { Usuarios } = require('../../db/schema');
+const { Usuarios, Cabellos, Direcciones, InformacionBancaria, InformacionCompania, Criptomonedas } = require('../../db/schema');
 
 class UsersModel {
     static async register({ usuario }) {
@@ -32,6 +32,13 @@ class UsersModel {
                 password: hashedPassword,
                 email
             });
+
+            await Cabellos.create({ user_id: user.id });
+            await Direcciones.create({ user_id: user.id });
+            await InformacionBancaria.create({ user_id: user.id });
+            await InformacionCompania.create({ user_id: user.id });
+            await Criptomonedas.create({ user_id: user.id });
+
             return {
                 username: user.username,
                 email: user.email
